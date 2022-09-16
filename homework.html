@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+    <script src="js/jquery.js"></script>
+    <script src="js/echarts.min.js"></script>
+    <script src="js/echarts-wordcloud.min.js"></script>
+    <script src="js/Chart.js"></script>
+</head>
+<body>
+    <div id='hero' style="width: 600px; height: 400px;"></div>
+</body>
+<script>
+    $.get('data/heroes.json',function(heroes){
+        console.log(heroes)
+
+        var pos_Num=new Map()
+
+        var dd=['近战','远程']
+        dd.forEach(function(el,i){
+            pos_Num.set(el,0)
+        })
+
+        heroes.forEach(function(el,i){
+
+            var n=pos_Num.get(el['攻击范围'])+1;
+            pos_Num.set(el['攻击范围'],n)
+
+        })
+        console.log(pos_Num)
+
+        bardata=[]
+        pos_Num.forEach(function(val,key){
+            var temp={
+                name:key,
+                value:val,
+            }
+            bardata.push(temp)
+        })
+        console.log(bardata)
+        Chart.createBar('hero',bardata)
+    })
+</script>
+</html>

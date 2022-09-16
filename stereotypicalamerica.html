@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+
+    <script src="http://api.map.baidu.com/api?v=2.0&ak=eGMltOdryZGZ41LaikW2U00vUYuP8fYB"></script>
+
+    <script src="js/jquery.js"></script>
+    <script src="js/echarts.min.js"></script>
+    <script src="js/bmap.js"></script>
+ 
+    <script src="js/Chart.js"></script>
+
+    <style>
+        #tree{
+            position: absolute;
+            left:0px;
+            top:0px;
+            background-color: blueviolet;
+        }
+    </style>
+
+</head>
+<body>
+    <div id='map' style="width:100%;height:500px"></div>
+    <div id='tree' style="width:30%;height:200px;"></div>
+</body>
+<script>
+
+    
+
+    var center=[-105,40]
+
+    $.get('data/pizza.json',function(res){
+        var shopMap=new Map()
+        var colorMap=new Map()
+        
+        res.data.forEach(function(el,i){
+            if(!colorMap.has(el['省份'])){
+               var color=Chart.mcolor.shift()
+               colorMap.set(el['省份'],color) 
+            }
+
+            var tip='店名:'+el['店名']+'<br/>'+'地址'+el['地址']+'<br/>'+'城市'+el['城市']+'<br/>'+'省份'+el['省份']
+
+            if(!shopMap.has(el['id'])){
+                var temp={
+                    name:el['店名'],
+                    value:[el['经度'],el['纬度']],
+                    color:colorMap.get(el['省份']),
+                    tip:tip,
+                    menu:[
+                        {name:el['菜品'],value:el['价格']}
+                    ]
+                }
+                shopMap.set(el['id'],temp)
+            }else{
+                var cur=shopMap.get(el['id'])
+                cur.menu.push(
+                    {name:el['菜品'],value:el['价格']}
+                )
+                shopMap.set(el['id'],cur)
+            }
+        }) 
+        console.log(shopMap)
+        var shop=[]
+
+        shopMap.forEach(function(val,k){
+            shop.push(val)
+        })
+
+        var map=Chart.createMap('map',center,shop)
+
+        map.on('click','series.scatter',function(params){
+            var data={
+                name:params.data.name,
+                children:params.data.menu
+            }
+            console.log(data)
+            Chart.createTree('tree',data)
+        })
+    })
+
+   
+
+
+
+</script>
+</html>

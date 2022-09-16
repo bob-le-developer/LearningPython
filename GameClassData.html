@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+    <script src="js/jquery.js"></script>
+    <script src="js/echarts.min.js"></script>
+    <script src="js/echarts-wordcloud.min.js"></script>
+    <script src="js/Chart.js"></script>
+
+    <style>
+        .f1{
+            float:left;
+        }
+    </style>
+</head>
+<body>
+    <h2>Kowalski, analysis</h2>
+    <div id='hero' style="width: 600px; height: 400px;"></div>
+    <p>Conclusion: The relative majority of the classes are consisted of offensive mages and warriors, fewer heroes are support characters.</p>
+
+    <div class="f1" id='f0' style="width:400px;height:300px;"></div>
+    <div class="f1" id='f1' style="width:400px;height:300px;"></div>
+    <div class="f1" id='f2' style="width:400px;height:300px;"></div>
+    <div class="f1" id='f3' style="width:400px;height:300px;"></div>
+    <div class="f1" id='f4' style="width:400px;height:300px;"></div>
+    <div class="f1" id='f5' style="width:400px;height:300px;"></div>
+    <div style="clear:both"></div>
+    <div id='radar' style="width: 600px; height: 400px;"></div>
+
+    <div id='para' style="width:600px;height:400px;"></div>
+
+    <div id='line' style="width:600px;height:400px;"></div>
+    
+</body>
+<script>
+    $.get('data/heroes.json',function(heroes){
+        console.log(heroes)
+
+        var pos_Num=new Map()
+
+        var dd=['坦克','战士','刺客','法师','射手','辅助']
+        dd.forEach(function(el,i){
+            pos_Num.set(el,0)
+        })
+
+        heroes.forEach(function(el,i){
+
+            var n=pos_Num.get(el['主要定位'])+1;
+            pos_Num.set(el['主要定位'],n)
+
+        })
+        console.log(pos_Num)
+
+        bardata=[]
+        pos_Num.forEach(function(val,key){
+            var temp={
+                name:key,
+                value:val,
+            }
+            bardata.push(temp)
+        })
+        console.log(bardata)
+        var baroption={
+            title:'Classes of different heroes in LOL',
+        }
+        Chart.createBar('hero',bardata,baroption)
+
+        var color=['LightGreen','MediumPurple','PaleVioletRed','salmon','skyblue','PaleVioletRed']
+        var attr=['最大生命','最大法力','最高物攻','最大物防','最大每5秒回血','最大每5秒回蓝']
+
+        function reorder(key){
+            heroes.sort(function(a,b){
+                if(a[ key ]<b[ key ]){
+                    return 1
+                }
+                else if(a[ key ]>b[ key ]){
+                    return -1
+                }
+                else{
+                    return 0
+                }
+            })
+            return heroes
+        }
+
+        function find(arr, key){
+            var TOP1=[]
+            arr.slice(0,10).forEach(function(el,i){
+                var temp={
+                    name:el['英雄'],
+                    value:el[key],
+                }
+                TOP1.push(temp)
+            })
+            return TOP1
+        }
+
+
+        attr.forEach(function(el,i){
+            var temp1=reorder(el)
+            var temp2=find(temp1, el)
+            var opt1={
+                title:el+'top 10 heroes',
+                color:color[i]
+            }
+            Chart.createBar('f'+i,temp2,opt1)
+        })
+
+        var Maxvalue=[
+            {name:'最大生命',max:9328},
+            {name:'最大法力',max:2016},
+            {name:'最高物攻',max:427},
+            {name:'最大物防',max:514},
+            {name:'最大每5秒回血',max:128},
+            {name:'最大每5秒回蓝',max:50},
+        ]
+        
+        // var data=[
+        //     {name:'夏侯惇',value:[7350,1746,321,397,98,37]}
+        // ]
+
+        var data=[]
+        heroes.forEach(function(el,i){
+            if(el['主要定位']=='射手'){
+                var temp={
+                    name:el['英雄'],
+                    value:[]
+                }
+
+                attr.forEach(function(k,i){
+                    temp.value.push(el[k])
+                })
+
+                data.push(temp)
+            }
+        })
+
+        var opt={
+            indicator:Maxvalue,
+            title:'pewpew archer stats'
+
+        }
+
+        Chart.createRadar('radar',data,opt)
+
+        var attribute=["英雄","初始生命","最大生命","初始法力","最大法力","初始物攻","最高物攻","初始物防","最大物防"]
+
+        // var attrValue=[
+        //     ["夏侯惇",3307,7350,430,1746,159,321,101,397]
+        // ]
+
+        var attrValue=[]
+
+        heroes.forEach(function(el,i){
+            if(el['主要定位']=='射手'){
+                var temp=[]
+
+                attribute.forEach(function(k,i){
+                    temp.push(el[k])
+                })
+
+                attrValue.push(temp)
+            }
+        })
+
+        var para={
+            legendName:'英雄',
+            label:attribute,
+            value:attrValue,
+        }
+
+        Chart.createParallel('para',para)
+
+
+        ///////////
+
+        var raw=[];
+        var heroName=[]
+
+        heroes.forEach(function(el,i){
+            if(el['英雄']=='后羿'||el['英雄']=='马可波罗'){
+                raw.push(el)
+                heroName.push(el['英雄'])
+            }
+        })
+        console.log(raw, heroName)
+
+        var Grade=[]
+        for(var i=1;i<=20;i++){
+            Grade.push(i+'级')
+        }
+
+        var dataArr=[]
+        raw.forEach(function(el,i){
+            var temp=[el['初始物攻']]
+            for(var i=2;i<=20;i++){
+                var n=el['初始物攻']+(i-1)*el['物攻成长']
+                if(n>el['最高物攻']){
+                    temp.push(el['最高物攻'])
+                }
+                else{
+                    temp.push(n)
+                }
+            }
+            dataArr.push(temp)
+        })
+
+        var opt={
+            title:'Big growth much good',
+            legend:heroName,
+            xAxisLabel:Grade,
+            showAvg:true,
+        }
+
+        Chart.createMultLine('line',dataArr,opt)
+    })
+
+    
+
+</script>
+</html>
